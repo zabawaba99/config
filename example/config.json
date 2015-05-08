@@ -1,0 +1,15 @@
+{
+  "port":{
+    "description":"The port that the application will run on",
+    "env_name":"PORT",
+    "flag_name":"port",
+    "default":8080,
+    "type":"uint"
+  },
+  "s3_bucket":{
+    "description":"The s3 bucket used to upload icons",
+    "env_name":"S3_BUCKET",
+    "flag_name":"s3.bucket",
+    "default":""
+  }
+}
