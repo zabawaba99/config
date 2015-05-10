@@ -2,10 +2,12 @@ package config
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func cleanupValues() {
@@ -16,6 +18,32 @@ func cleanupValues() {
 
 	for _, arg := range args {
 		delete(values, arg)
+	}
+}
+
+func TestLoad(t *testing.T) {
+
+	// ARRAGE
+
+	flagArgDef := argument{FlagName: "flagArgDef", Default: "foo"}
+	envArgDef := argument{EnvName: "envArgDef", Default: "foo"}
+	flagEnvArgDef := argument{FlagName: "flagEnvArgDef", EnvName: "flagEnvArg", Default: "foo"}
+
+	config := map[string]argument{
+		"flagDef":    flagArgDef,
+		"envDef":     envArgDef,
+		"flagEnvDef": flagEnvArgDef,
+	}
+
+	// ACT
+	load(config)
+
+	// ASSERT
+	require.Len(t, values, len(config))
+	for k, v := range config {
+		configuredVal, ok := values[k]
+		require.True(t, ok, fmt.Sprintf("%s was not loaded correctly", k))
+		assert.Equal(t, v.Default, configuredVal.resolve(), fmt.Sprintf("%s was not loaded correctly", k))
 	}
 }
 

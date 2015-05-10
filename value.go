@@ -10,6 +10,8 @@ type value struct {
 	Flag interface{}
 	// Env is the value retrieved and parsed from `os.Getenv`
 	Env interface{}
+	// Fallback is the value that is returned if both Flag and Env are empty
+	Fallback interface{}
 	// Type is the string representation of the type
 	// of value that `Flag` and `Env` are
 	// 		i.e: `uint`, `int`, `float64`, `string`, etc
@@ -23,5 +25,11 @@ func (v value) resolve() interface{} {
 	}
 
 	// get the value of the flag pointer
-	return reflect.ValueOf(v.Flag).Elem().Interface()
+	val := reflect.ValueOf(v.Flag)
+
+	// make sure it's not nil
+	if !val.IsValid() {
+		return v.Fallback
+	}
+	return val.Elem().Interface()
 }

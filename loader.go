@@ -64,8 +64,7 @@ func load(config map[string]argument) {
 		if c.Type == "" {
 			c.Type = "string"
 		}
-
-		values[name] = value{Flag: f, Env: e, Type: c.Type, UseEnv: useEnv}
+		values[name] = value{Flag: f, Env: e, Type: c.Type, Fallback: c.Default, UseEnv: useEnv}
 	}
 	flag.Parse()
 }
