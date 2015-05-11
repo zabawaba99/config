@@ -1,4 +1,4 @@
-# config [![Build Status](https://travis-ci.org/zabawaba99/config.svg?branch=master)](https://travis-ci.org/zabawaba99/config) [![Coverage Status](https://coveralls.io/repos/zabawaba99/config/badge.svg?branch=ci)](https://coveralls.io/r/zabawaba99/config?branch=ci)
+# config [![Build Status](https://travis-ci.org/zabawaba99/config.svg?branch=master)](https://travis-ci.org/zabawaba99/config) [![Coverage Status](https://coveralls.io/repos/zabawaba99/config/badge.svg?branch=master)](https://coveralls.io/r/zabawaba99/config?branch=master)
 ---
 
 A package that helps load an application's configuration through a mixture
