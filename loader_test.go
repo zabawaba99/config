@@ -22,9 +22,9 @@ func cleanupValues() {
 }
 
 func TestLoad(t *testing.T) {
+	defer cleanupValues()
 
 	// ARRAGE
-
 	flagArgDef := argument{FlagName: "flagArgDef", Default: "foo"}
 	envArgDef := argument{EnvName: "envArgDef", Default: "foo"}
 	flagEnvArgDef := argument{FlagName: "flagEnvArgDef", EnvName: "flagEnvArg", Default: "foo"}
@@ -45,6 +45,29 @@ func TestLoad(t *testing.T) {
 		require.True(t, ok, fmt.Sprintf("%s was not loaded correctly", k))
 		assert.Equal(t, v.Default, configuredVal.resolve(), fmt.Sprintf("%s was not loaded correctly", k))
 	}
+}
+
+func TestLoadOntoStruct(t *testing.T) {
+	defer cleanupValues()
+
+	// ARRANGE
+	config, err := parseJSON("example/config.json")
+	require.NoError(t, err)
+
+	load(config)
+	require.Len(t, values, 2)
+
+	// ACT
+	var cStruct struct {
+		Port     uint   `config:"port"`
+		MyBucket string `config:"s3_bucket"`
+	}
+	err = Load(&cStruct)
+
+	// ASSERT
+	assert.NoError(t, err)
+	assert.Equal(t, "", cStruct.MyBucket)
+	assert.Equal(t, uint(8080), cStruct.Port)
 }
 
 func TestLoadFlag(t *testing.T) {
