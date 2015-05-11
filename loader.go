@@ -10,6 +10,7 @@ import (
 )
 
 var errNoEnvVar = errors.New("no env var")
+var errNotPtr = errors.New("cannot only load onto pointer")
 var values = map[string]value{}
 
 func init() {
@@ -107,9 +108,10 @@ func loadEnv(a argument) (interface{}, error) {
 
 func Load(v interface{}) error {
 	val := reflect.ValueOf(v)
-	if val.Kind() == reflect.Ptr {
-		val = val.Elem()
+	if val.Kind() != reflect.Ptr {
+		return errNotPtr
 	}
+	val = val.Elem()
 
 	if k := val.Kind(); k != reflect.Struct {
 		return fmt.Errorf("can only load config into a struct not: %v", k)
