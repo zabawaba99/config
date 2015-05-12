@@ -25,11 +25,22 @@ func (v value) resolve() interface{} {
 	}
 
 	// get the value of the flag pointer
-	val := reflect.ValueOf(v.Flag)
+	val := reflect.ValueOf(v.Flag).Elem()
 
 	// make sure it's not nil
-	if !val.IsValid() {
+	if isZeroValue(val.Interface()) {
 		return v.Fallback
 	}
-	return val.Elem().Interface()
+	return val.Interface()
+}
+
+func isZeroValue(v interface{}) bool {
+	switch v.(type) {
+	case string:
+		return v.(string) == ""
+	case nil:
+		return true
+	}
+
+	return false
 }

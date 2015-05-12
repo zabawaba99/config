@@ -11,6 +11,7 @@ type argument struct {
 	EnvName     string      `json:"env_name"`
 	FlagName    string      `json:"flag_name"`
 	Type        string      `json:"type"`
+	Required    bool        `json:"require"`
 }
 
 func parseJSON(filename string) (map[string]argument, error) {

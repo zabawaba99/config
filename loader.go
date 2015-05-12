@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"reflect"
 	"strconv"
@@ -33,14 +34,43 @@ func init() {
 		return
 	}
 
-	load(config)
+	errs := load(config)
+	if len(errs) != 0 {
+		printUsageAndExit(config, errs)
+	}
 }
 
-func load(config map[string]argument) {
+func printUsageAndExit(config map[string]argument, errs []argError) {
+	logger := log.New(os.Stderr, "", 0)
+	logger.Print("Cannot start application:")
+	for _, err := range errs {
+		logger.Printf("  %s", err)
+	}
+	logger.Print("\nAttempted to use the following values:")
+	for k, v := range config {
+		var flagVal interface{} = ""
+		envVal := os.Getenv(v.EnvName)
+
+		if val, ok := values[k]; ok {
+			flagVal = reflect.ValueOf(val.Flag).Elem().Interface()
+		}
+		logger.Printf("  -%s: %v", v.FlagName, flagVal)
+		logger.Printf("  %s : %v", v.EnvName, envVal)
+	}
+	logger.Println()
+	logger.Println("Usage")
+	for k, v := range config {
+		logger.Printf("  %s:\t\t%s\n", k, v.Description)
+	}
+	logger.Println()
+	logger.Fatal("Exiting...")
+}
+
+func load(config map[string]argument) (errs []argError) {
+	// try and load the flag/env for every config in the json file
 	for name, c := range config {
 		var (
-			f      interface{}
-			e      interface{}
+			f, e   interface{}
 			useEnv bool
 		)
 
@@ -68,6 +98,25 @@ func load(config map[string]argument) {
 		values[name] = value{Flag: f, Env: e, Type: c.Type, Fallback: c.Default, UseEnv: useEnv}
 	}
 	flag.Parse()
+
+	// check if any of the required configurations are missing
+	for name, arg := range config {
+		if !arg.Required {
+			continue
+		}
+
+		val, ok := values[name]
+		if !ok {
+			errs = append(errs, argError{couldNotParse, arg})
+			continue
+		}
+
+		if isZeroValue(val.resolve()) {
+			errs = append(errs, argError{argMissing, arg})
+			continue
+		}
+	}
+	return errs
 }
 
 func loadFlag(a argument) (interface{}, error) {
@@ -81,7 +130,11 @@ func loadFlag(a argument) (interface{}, error) {
 
 		v = flag.Uint64(a.FlagName, uint64(ii), a.Description)
 	default:
-		v = flag.String(a.FlagName, fmt.Sprintf("%s", a.Default), a.Description)
+		def := fmt.Sprintf("%s", a.Default)
+		if isZeroValue(a.Default) {
+			def = ""
+		}
+		v = flag.String(a.FlagName, def, a.Description)
 	}
 	return v, nil
 }
@@ -106,6 +159,8 @@ func loadEnv(a argument) (interface{}, error) {
 	return v, nil
 }
 
+// Load marshals the loaded configuration into the given interface.
+// If the interface is not a struct pointer, and error will be returned.
 func Load(v interface{}) error {
 	val := reflect.ValueOf(v)
 	if val.Kind() != reflect.Ptr {
