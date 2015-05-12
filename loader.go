@@ -69,14 +69,11 @@ func printUsageAndExit(config map[string]argument, errs []argError) {
 func load(config map[string]argument) (errs []argError) {
 	// try and load the flag/env for every config in the json file
 	for name, c := range config {
-		var (
-			f, e   interface{}
-			useEnv bool
-		)
+		v := value{Type: c.Type, Default: c.Default}
 
 		var err error
 		if c.FlagName != "" {
-			f, err = loadFlag(c)
+			v.Flag, err = loadFlag(c)
 			if err != nil {
 				println(err.Error())
 				continue
@@ -84,18 +81,14 @@ func load(config map[string]argument) (errs []argError) {
 		}
 
 		if c.EnvName != "" {
-			e, err = loadEnv(c)
-			useEnv = err != errNoEnvVar
-			if useEnv && err != nil {
+			v.Env, err = loadEnv(c)
+			v.UseEnv = err != errNoEnvVar
+			if v.UseEnv && err != nil {
 				println(err.Error())
 				continue
 			}
 		}
-
-		if c.Type == "" {
-			c.Type = "string"
-		}
-		values[name] = value{Flag: f, Env: e, Type: c.Type, Fallback: c.Default, UseEnv: useEnv}
+		values[name] = v
 	}
 	flag.Parse()
 
@@ -192,8 +185,8 @@ func Load(v interface{}) error {
 			continue
 		}
 
-		// TODO: validate that the field type
-		// is the same as the type we are setting
+		// TODO: make sure we can actually set the newVal
+		// onto the struct field
 		newVal := c.resolve()
 		switch c.Type {
 		case "uint", "uint8", "uint16", "uint32", "uint64":
