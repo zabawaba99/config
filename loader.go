@@ -24,14 +24,12 @@ func init() {
 	// TODO: parse yaml
 
 	if filename == "" {
-		return
+		log.Fatal("missing config file")
 	}
 
 	config, err := parser(filename)
 	if err != nil {
-		println("err", err.Error())
-		// do something
-		return
+		log.Fatal("Could not parse config file", err)
 	}
 
 	errs := load(config)
