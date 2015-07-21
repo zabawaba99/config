@@ -46,6 +46,8 @@ func isZeroValue(v interface{}) bool {
 	switch v.(type) {
 	case uint, uint8, uint16, uint32, uint64:
 		return v.(uint64) == 0
+	case float32, float64:
+		return v.(float64) == 0
 	case string:
 		return v.(string) == ""
 	case nil:
