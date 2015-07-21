@@ -8,6 +8,7 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 var errNoEnvVar = errors.New("no env var")
@@ -163,6 +164,11 @@ func Load(v interface{}) error {
 		return fmt.Errorf("can only load config into a struct not: %v", k)
 	}
 
+	setTypeFields(val)
+	return nil
+}
+
+func setTypeFields(val reflect.Value) {
 	typ := val.Type()
 	// loop through the struct's fields and set the map
 	for i := 0; i < val.NumField(); i++ {
@@ -171,27 +177,37 @@ func Load(v interface{}) error {
 			continue
 		}
 
-		f := typ.Field(i)
-		configName := f.Tag.Get("config")
-		if configName == "" {
-			configName = f.Name
-		}
-
-		c, ok := values[configName]
-		if !ok {
-			// not in config file
-			continue
-		}
-
-		// TODO: make sure we can actually set the newVal
-		// onto the struct field
-		newVal := c.resolve()
-		switch c.Type {
-		case "uint", "uint8", "uint16", "uint32", "uint64":
-			fv.SetUint(newVal.(uint64))
-		default:
-			fv.SetString(newVal.(string))
+		if fv.Kind() == reflect.Struct {
+			setTypeFields(fv)
+		} else {
+			setVal(fv, typ.Field(i))
 		}
 	}
-	return nil
+}
+
+func setVal(fv reflect.Value, f reflect.StructField) {
+	configName := f.Tag.Get("config")
+	if configName == "" {
+		configName = strings.ToLower(f.Name)
+	}
+
+	c, ok := values[configName]
+	if !ok {
+		// not in config file
+		return
+	}
+
+	// TODO: make sure we can actually set the newVal
+	// onto the struct field
+	newVal := c.resolve()
+	switch c.Type {
+	case "uint", "uint8", "uint16", "uint32", "uint64":
+		fv.SetUint(newVal.(uint64))
+	default:
+		v, ok := newVal.(string)
+		if !ok {
+			v = ""
+		}
+		fv.SetString(v)
+	}
 }
