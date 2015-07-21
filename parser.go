@@ -3,6 +3,7 @@ package config
 import (
 	"encoding/json"
 	"io/ioutil"
+	"strings"
 )
 
 type argument struct {
@@ -25,5 +26,10 @@ func parseJSON(filename string) (map[string]argument, error) {
 		return nil, err
 	}
 
-	return c, nil
+	ci := map[string]argument{}
+	for k, v := range c {
+		ci[strings.ToLower(k)] = v
+	}
+
+	return ci, nil
 }
