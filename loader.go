@@ -52,8 +52,8 @@ func printUsageAndExit(config map[string]argument, errs []argError) {
 		if val, ok := values[k]; ok {
 			flagVal = reflect.ValueOf(val.Flag).Elem().Interface()
 		}
-		logger.Printf("  -%s: %v", v.FlagName, flagVal)
-		logger.Printf("  %s : %v", v.EnvName, envVal)
+		logger.Printf("-\n  Flag:\t%s: \"%v\"", v.FlagName, flagVal)
+		logger.Printf("  Env:\t%s : %q", v.EnvName, envVal)
 	}
 	logger.Println()
 	logger.Println("Usage")
